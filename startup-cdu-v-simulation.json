@@ -1,0 +1,395 @@
+{
+  "id": "startup-cdu-v",
+  "title": "CDU-V Startup Simulation",
+  "source": "TKI C04-002/KPI48113/2024-S9 Rev.1",
+  "type": "procedural-training-simulator",
+  "version": 1,
+  "stages": [
+    {
+      "id": "preparation",
+      "name": "A. Persiapan",
+      "description": "Readiness check sebelum pelaksanaan start-up CDU-V.",
+      "steps": [
+        {
+          "id": "readiness-check",
+          "title": "Readiness Check",
+          "status": "waiting",
+          "checklist": [
+            "Pastikan mitigasi risiko sudah dilakukan.",
+            "Pastikan semua sistem utilitas ready.",
+            "Pastikan semua sistem instrumentasi ready.",
+            "Pastikan rotating equipment ready.",
+            "Pastikan line-up start-up ready.",
+            "Pastikan FLO di tanki N1 cukup dan sesuai spesifikasi.",
+            "Pastikan tanki slop V-11 sudah dikosongkan.",
+            "Pastikan tanki N-6 minimum level untuk sirkulasi.",
+            "Pastikan steam tracing sudah dijalankan.",
+            "Pastikan CPI System G-234-01A/B dan G-234-02A/B sudah in service."
+          ],
+          "parameters": [
+            { "id": "tankN1Level", "label": "Tanki N1 Level", "min": 9, "max": 11, "unit": "m", "warningLow": "Level tanki N1 di bawah target", "warningHigh": "Level tanki N1 di atas target" },
+            { "id": "tankV11Level", "label": "Tanki V-11 Level", "max": 70, "unit": "cm", "warningHigh": "Tanki slop V-11 belum cukup kosong" },
+            { "id": "tankN6Level", "label": "Tanki N-6 Level", "target": 250, "unit": "cm" },
+            { "id": "c20111Level", "label": "C-201-11 Level", "target": 50, "unit": "%" }
+          ]
+        },
+        {
+          "id": "pressurized-blanket-fuel-gas",
+          "title": "Pressurized dan Blanket Fuel Gas",
+          "linkedNodes": ["C-201-01", "C-201-12", "C-201-13"],
+          "instruments": ["201-PIC-061", "201-PIC-072"],
+          "actions": [
+            "C-201-01 sedikit positive pressure.",
+            "C-201-12 sesuai tekanan fuel gas.",
+            "C-201-13 sedikit positive pressure."
+          ],
+          "checklist": [
+            "C-201-01 sudah positive pressure.",
+            "C-201-12 sudah sesuai tekanan fuel gas.",
+            "C-201-13 sudah positive pressure."
+          ]
+        },
+        {
+          "id": "startup-bypass-setting",
+          "title": "Startup Bypass Setting",
+          "instruments": ["201-HS-100", "201-HS-025", "201-HS-007", "201-HS-019", "201-HS-020", "201-HS-026", "201-HS-029"],
+          "checklist": [
+            "201-HS-100 pada posisi Normal.",
+            "201-HS-025 pada posisi Bypass.",
+            "201-HS-007 pada posisi Bypass.",
+            "201-HS-019 pada posisi Bypass.",
+            "201-HS-020 pada posisi Bypass.",
+            "201-HS-026 pada posisi Bypass.",
+            "201-HS-029 pada posisi Bypass."
+          ],
+          "statusChecks": [
+            { "id": "201-HS-100", "expected": "Normal" },
+            { "id": "201-HS-025", "expected": "Bypass" },
+            { "id": "201-HS-007", "expected": "Bypass" },
+            { "id": "201-HS-019", "expected": "Bypass" },
+            { "id": "201-HS-020", "expected": "Bypass" },
+            { "id": "201-HS-026", "expected": "Bypass" },
+            { "id": "201-HS-029", "expected": "Bypass" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "execution",
+      "name": "B. Pelaksanaan",
+      "description": "Tahapan pelaksanaan start-up CDU-V.",
+      "steps": [
+        {
+          "id": "solar-circulation",
+          "title": "Sirkulasi Solar",
+          "linkedNodes": ["G-220-02A/B", "G-201-01A/B", "G-201-08A/B"],
+          "parameters": [
+            { "id": "201-FI-001", "label": "201-FI-001", "min": 180, "max": 200, "target": 200, "unit": "m3/jam", "warningLow": "Flow sirkulasi solar rendah", "warningHigh": "Flow sirkulasi solar tinggi" }
+          ],
+          "checklist": [
+            "Sirkulasi solar sudah lineup.",
+            "Pompa sirkulasi siap operasi.",
+            "Flow 201-FI-001 stabil dalam batas operasi."
+          ]
+        },
+        {
+          "id": "furnace-burner-light-off",
+          "title": "Penyalaan Burner F-201-01",
+          "linkedNodes": ["F-201-01", "K-201-02", "K-201-03"],
+          "instruments": ["201-PCV-122", "201-PCV-097", "201-AI-003"],
+          "preconditions": ["Gas test done", "Standby fire team", "IDF running", "FDF running"],
+          "parameters": [
+            { "id": "pilotGasPressure", "label": "Pilot Gas Pressure", "min": 0.49, "max": 0.8, "unit": "kg/cm2" },
+            { "id": "fuelGasPressure", "label": "Fuel Gas Pressure", "min": 0.6, "max": 1.9, "unit": "kg/cm2" },
+            { "id": "oxygenFlueGas", "label": "Oxygen Flue Gas", "min": 5, "unit": "%vol", "warningLow": "Oxygen flue gas below minimum" }
+          ],
+          "checklist": [
+            "Gas test done.",
+            "Fire team standby.",
+            "IDF running.",
+            "FDF running.",
+            "Burner menyala normal."
+          ]
+        },
+        {
+          "id": "heat-up-90",
+          "title": "Heating-up ke 90°C",
+          "linkedNodes": ["F-201-01"],
+          "instruments": ["201-TIC-058", "201-TI-040", "201-TI-041"],
+          "parameters": [
+            { "id": "targetTemperature", "label": "Target Temperature", "target": 90, "unit": "°C" },
+            { "id": "rampRate", "label": "Ramp Rate", "max": 30, "unit": "°C/jam", "warningHigh": "Kenaikan temperatur terlalu cepat" }
+          ]
+        },
+        {
+          "id": "heat-up-120",
+          "title": "Heating-up ke 120°C",
+          "linkedNodes": ["F-201-01"],
+          "instruments": ["201-TIC-058"],
+          "parameters": [
+            { "id": "targetTemperature", "label": "Target Temperature", "target": 120, "unit": "°C" },
+            { "id": "rampRate", "label": "Ramp Rate", "max": 30, "unit": "°C/jam", "warningHigh": "Kenaikan temperatur terlalu cepat" }
+          ]
+        },
+        {
+          "id": "heat-up-150",
+          "title": "Heating-up ke 150°C",
+          "linkedNodes": ["F-201-01"],
+          "instruments": ["201-TIC-058"],
+          "parameters": [
+            { "id": "targetTemperature", "label": "Target Temperature", "target": 150, "unit": "°C" },
+            { "id": "rampRate", "label": "Ramp Rate", "max": 30, "unit": "°C/jam", "warningHigh": "Kenaikan temperatur terlalu cepat" }
+          ]
+        },
+        {
+          "id": "switch-solar-to-crude",
+          "title": "Switch Sirkulasi Solar ke Crude",
+          "linkedNodes": ["G-220-01A/B/C/D", "G-201-01A/B"],
+          "instruments": ["201-PI-007"],
+          "actions": [
+            "Operasikan salah satu pompa crude.",
+            "Buka block line crude.",
+            "Tutup block sirkulasi solar.",
+            "Amati tekanan suction G-201-01A/B."
+          ],
+          "parameters": [
+            { "id": "suctionPressure", "label": "Suction Pressure", "min": 4.5, "max": 6, "unit": "kg/cm2" }
+          ]
+        },
+        {
+          "id": "raise-crude-temperature-normal",
+          "title": "Menaikkan Temperatur Crude ke Normal Operation",
+          "linkedNodes": ["F-201-01", "C-201-01"],
+          "instruments": ["201-TIC-059", "201-TI-040", "201-TI-041", "201-AI-003", "201-PI-028", "201-PIC-061"],
+          "parameters": [
+            { "id": "targetTemperature", "label": "Target Temperature", "min": 310, "max": 345, "unit": "°C" },
+            { "id": "rampRate", "label": "Ramp Rate", "max": 30, "unit": "°C/jam", "warningHigh": "Kenaikan temperatur terlalu cepat" },
+            { "id": "oxygenFlueGas", "label": "Oxygen Flue Gas", "min": 5, "unit": "%vol", "warningLow": "Oxygen flue gas below minimum" },
+            { "id": "topPressure", "label": "Top Pressure", "min": 0.3, "max": 0.7, "unit": "kg/cm2" },
+            { "id": "pic061Setpoint", "label": "201-PIC-061 Setpoint", "target": 0.25, "unit": "kg/cm2" }
+          ]
+        },
+        {
+          "id": "start-external-reflux",
+          "title": "Start External Reflux C-201-01",
+          "linkedNodes": ["C-201-08", "G-201-03A/B", "C-201-01"],
+          "instruments": ["201-LC-018", "201-FCV-028"],
+          "actions": [
+            "Jika level C-201-08 sekitar 50%, start G-201-03A/B.",
+            "Jika level C-201-08 sekitar 60%, buka 201-FCV-028 dan jaga level sekitar 50%."
+          ],
+          "parameters": [
+            { "id": "c20108LevelStart", "label": "C-201-08 Level Start", "min": 50, "unit": "%" },
+            { "id": "c20108LevelOpen", "label": "C-201-08 Level Open", "min": 60, "unit": "%" }
+          ]
+        },
+        {
+          "id": "start-top-pa",
+          "title": "Start Top PA",
+          "linkedNodes": ["G-201-05A/B", "C-201-01"],
+          "instruments": ["201-FIC-004", "201-QC-003", "201-TC-064"],
+          "parameters": [
+            { "id": "topTemperature", "label": "Top Temperature", "min": 95, "max": 105, "target": 95, "unit": "°C" },
+            { "id": "topPAFlow", "label": "Top PA Flow", "min": 400, "max": 430, "unit": "m3/jam" }
+          ]
+        },
+        {
+          "id": "start-kero-pa",
+          "title": "Start Kero PA",
+          "linkedNodes": ["G-201-06A/B", "C-201-01"],
+          "instruments": ["201-FIC-008", "201-QC-002", "201-LIC-006", "201-FIC-022"],
+          "parameters": [
+            { "id": "keroPAFlow", "label": "Kero PA Flow", "min": 250, "max": 270, "unit": "m3/jam" },
+            { "id": "trayLevel", "label": "Tray Level", "min": 50, "unit": "%" },
+            { "id": "hotRefluxFlow", "label": "Hot Reflux Flow", "min": 30, "max": 50, "unit": "m3/jam" }
+          ]
+        },
+        {
+          "id": "start-lgo-pa",
+          "title": "Start LGO PA",
+          "linkedNodes": ["G-201-07A/B", "C-201-01"],
+          "instruments": ["201-FIC-031", "201-QC-004", "201-LIC-007", "201-FIC-021"],
+          "parameters": [
+            { "id": "lgoPAFlow", "label": "LGO PA Flow", "min": 240, "max": 260, "unit": "m3/jam" },
+            { "id": "trayLevel", "label": "Tray Level", "min": 50, "unit": "%" },
+            { "id": "hotRefluxFlow", "label": "Hot Reflux Flow", "min": 60, "max": 80, "unit": "m3/jam" }
+          ]
+        },
+        {
+          "id": "start-kerosene-rundown",
+          "title": "Start Kerosene Rundown",
+          "linkedNodes": ["C-201-02", "G-201-09A/B"],
+          "instruments": ["201-LCV-013", "201-FCV-040"],
+          "parameters": [
+            { "id": "c20102Level", "label": "C-201-02 Level", "min": 50, "unit": "%" },
+            { "id": "targetYield", "label": "Target Yield", "target": 13.3, "unit": "%" }
+          ]
+        },
+        {
+          "id": "start-lgo-rundown",
+          "title": "Start LGO Rundown",
+          "linkedNodes": ["C-201-03", "G-201-10A/B"],
+          "instruments": ["201-LCV-014", "201-FCV-043", "201-PCV-118"],
+          "parameters": [
+            { "id": "c20103Level", "label": "C-201-03 Level", "min": 50, "unit": "%" },
+            { "id": "targetYield", "label": "Target Yield", "target": 10, "unit": "%" }
+          ]
+        },
+        {
+          "id": "start-hgo-rundown",
+          "title": "Start HGO Rundown",
+          "linkedNodes": ["C-201-04", "G-201-11A/B"],
+          "instruments": ["201-LCV-015", "201-FCV-045"],
+          "parameters": [
+            { "id": "c20104Level", "label": "C-201-04 Level", "min": 50, "unit": "%" },
+            { "id": "targetYield", "label": "Target Yield", "target": 10, "unit": "%" }
+          ]
+        },
+        {
+          "id": "start-bottom-stripping-steam",
+          "title": "Start Stripping Steam Bottom C-201-01",
+          "linkedNodes": ["C-201-01"],
+          "instruments": ["201-FC-014"],
+          "parameters": [
+            { "id": "bottomTemperature", "label": "Bottom Temperature", "min": 220, "unit": "°C" },
+            { "id": "steamFlow", "label": "Steam Flow", "min": 1, "max": 2, "unit": "ton/jam" }
+          ]
+        },
+        {
+          "id": "drain-out-c20108",
+          "title": "Drain Out C-201-08",
+          "linkedNodes": ["C-201-08", "G-201-04A/B", "C-201-11"],
+          "instruments": ["201-LCV-019", "201-FI-026"],
+          "parameters": [
+            { "id": "waterBootLevel", "label": "Water Boot Level", "min": 50, "unit": "%" },
+            { "id": "waterFlow", "label": "Water Flow", "min": 6, "max": 12, "target": 11.7, "unit": "m3/jam" }
+          ]
+        },
+        {
+          "id": "operate-desalter-c20107",
+          "title": "Mengoperasikan Desalter C-201-07",
+          "linkedNodes": ["C-201-07"],
+          "instruments": ["201-FC-053", "201-PDC-009", "201-LC-001"],
+          "parameters": [
+            { "id": "washWaterFlow", "label": "Wash Water Flow", "min": 10, "max": 14, "target": 12.5, "unit": "m3/jam" },
+            { "id": "demulsifierStroke", "label": "Demulsifier Stroke", "target": 20, "unit": "%" },
+            { "id": "demulsifierFlow", "label": "Demulsifier Flow", "target": 2, "unit": "liter/jam" },
+            { "id": "mixingValveDp", "label": "Mixing Valve DP", "max": 0.7, "unit": "kg/cm2" },
+            { "id": "interfaceLevel", "label": "Interface Level", "min": 25, "max": 30, "unit": "%" }
+          ]
+        },
+        {
+          "id": "setting-operasi-c20101",
+          "title": "Setting Operasi C-201-01",
+          "linkedNodes": ["C-201-01"],
+          "instruments": ["201-FI-001", "201-PI-028", "201-TC-064", "201-TI-067", "201-TI-068", "201-TI-069"],
+          "parameters": [
+            { "id": "crudeInlet", "label": "Crude Inlet", "min": 180, "max": 200, "unit": "m3/jam" },
+            { "id": "topPressure", "label": "Top Pressure", "min": 0.3, "max": 0.7, "unit": "kg/cm2" },
+            { "id": "topTemperature", "label": "Top Temperature", "min": 95, "max": 105, "unit": "°C" },
+            { "id": "c20102BottomTemp", "label": "C-201-02 Bottom Temp", "min": 185, "max": 195, "unit": "°C" },
+            { "id": "c20103BottomTemp", "label": "C-201-03 Bottom Temp", "min": 245, "max": 265, "unit": "°C" },
+            { "id": "c20104BottomTemp", "label": "C-201-04 Bottom Temp", "min": 295, "max": 305, "unit": "°C" },
+            { "id": "flashZoneTemperature", "label": "Flash Zone Temperature", "target": 332, "unit": "°C" },
+            { "id": "overFlashRatio", "label": "Over Flash Ratio", "target": 5, "unit": "%" }
+          ]
+        },
+        {
+          "id": "product-rundown-to-tanks",
+          "title": "Produk Rundown ke Tanki Produk",
+          "products": ["Kerosine", "LGO", "HGO"],
+          "parameters": [
+            { "id": "kerosineFlashPoint", "label": "Kerosine Flash Point", "min": 100, "unit": "F" },
+            { "id": "kerosineEndPoint", "label": "Kerosine End Point", "max": 310, "unit": "°C" },
+            { "id": "kerosineSmokePoint", "label": "Kerosine Smoke Point", "min": 17, "unit": "mm" },
+            { "id": "kerosineColour", "label": "Kerosine Colour", "min": 19, "unit": "+Saybolt" },
+            { "id": "lgoFlashPoint", "label": "LGO Flash Point", "min": 135, "unit": "F" },
+            { "id": "lgoPourPoint", "label": "LGO Pour Point", "max": 20, "unit": "F" },
+            { "id": "hgoFlashPoint", "label": "HGO Flash Point", "min": 180, "unit": "F" },
+            { "id": "hgoPourPoint", "label": "HGO Pour Point", "max": 80, "unit": "F" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evaluation",
+      "name": "C. Evaluasi",
+      "description": "Evaluasi kondisi operasi setelah start-up.",
+      "steps": [
+        {
+          "id": "evaluate-furnace-cot",
+          "title": "Evaluasi COT Furnace",
+          "linkedNodes": ["F-201-01"],
+          "checklist": [
+            "COT mencapai 310-345°C bertahap.",
+            "Ramp rate maksimal 30°C/jam.",
+            "Furnace flame normal.",
+            "Tube condition normal.",
+            "Tidak ada kebocoran sistem.",
+            "Produk sesuai spesifikasi."
+          ],
+          "parameters": [
+            { "id": "cotTemperature", "label": "COT", "min": 310, "max": 345, "unit": "°C" },
+            { "id": "rampRate", "label": "Ramp Rate", "max": 30, "unit": "°C/jam", "warningHigh": "Kenaikan temperatur terlalu cepat" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "abnormal-emergency",
+      "name": "D. Abnormal / Emergency",
+      "description": "Skenario abnormal dan emergency selama start-up.",
+      "steps": [
+        {
+          "id": "leak-flange",
+          "title": "Leak / Rembesan Flange",
+          "status": "abnormal",
+          "linkedNodes": ["C-201-01", "F-201-01"],
+          "scenario": [
+            "Operator informasikan ke Shift Supervisor.",
+            "Lakukan smoothering dengan steam.",
+            "Shift Supervisor informasikan MA 1 Stationary untuk hot bolting."
+          ],
+          "checklist": [
+            "Informasikan ke Shift Supervisor.",
+            "Lakukan smoothering dengan steam.",
+            "Informasikan MA 1 Stationary untuk hot bolting."
+          ],
+          "simulatorBehavior": [
+            "Highlight area leak.",
+            "Status Abnormal.",
+            "Munculkan action checklist emergency."
+          ]
+        },
+        {
+          "id": "flash-fire",
+          "title": "Flash / Kebakaran",
+          "status": "emergency",
+          "linkedNodes": ["F-201-01"],
+          "scenario": [
+            "Operator lakukan pemadaman awal dengan steam/APAR.",
+            "Hubungi Supervisor CDU/HVU dan HSSE/Fire Station.",
+            "Supervisor informasikan ke Shift Superintendent.",
+            "Supervisor koordinasi Operator dan Panelman untuk mencegah eskalasi."
+          ],
+          "checklist": [
+            "Pemadaman awal dengan steam/APAR.",
+            "Hubungi Supervisor CDU/HVU dan HSSE/Fire Station.",
+            "Informasikan ke Shift Superintendent.",
+            "Koordinasi Operator dan Panelman untuk mencegah eskalasi."
+          ],
+          "simulatorBehavior": [
+            "Highlight F-201-01 atau area terkait.",
+            "Status Emergency.",
+            "Munculkan emergency checklist.",
+            "Beri scoring respon user berdasarkan urutan tindakan."
+          ],
+          "scoring": {
+            "orderedChecklist": true,
+            "maxScore": 100
+          }
+        }
+      ]
+    }
+  ]
+}
