@@ -1,0 +1,1317 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RefineryMap - Refinery Overview Block Diagram</title>
+    <meta name="application-name" content="RefineryMap">
+    <meta name="description" content="Big Canvas refinery process map built with vanilla HTML, CSS, and JavaScript.">
+    <meta name="theme-color" content="#0f4ea8">
+    <link rel="icon" type="image/svg+xml" href="./assets/branding/favicon.svg">
+    <link rel="icon" type="image/png" href="./assets/branding/refinerymap-icon.png">
+    <link rel="shortcut icon" href="./assets/branding/favicon.ico">
+    <link rel="apple-touch-icon" href="./assets/branding/refinerymap-icon.png">
+    <link rel="stylesheet" href="./styles.recovery.v8.ai.css?v=v8-color-themes-20260713">
+  </head>
+  <body class="is-loading">
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html" aria-label="RefineryMap home">
+          <img src="./assets/branding/refinerymap-logo.png" alt="RefineryMap logo" class="brand-logo" id="brandLogo">
+          <span class="brand-fallback">RefineryMap</span>
+        </a>
+
+        <div class="topbar-copy">
+          <p class="eyebrow">RefineryMap CDU Mass Balance</p>
+          <h1>Crude Distillation Unit</h1>
+          <p>CDU split model, final product yields, and hydrocarbon mass balance.</p>
+        </div>
+
+      </header>
+
+      <section class="workspace">
+        <section class="canvas-panel" aria-label="Big Canvas RefineryMap">
+          <div class="canvas-toolbar top-toolbar">
+            <div class="zoom-group toolbar-group zoom-control-compact" role="group" aria-label="Kontrol zoom">
+              <button class="tool-button icon-action-btn" id="zoomOut" type="button" title="Zoom out" data-tooltip="Zoom out" aria-label="Zoom out">−</button>
+              <span class="zoom-value" id="zoomValue">100%</span>
+              <button class="tool-button icon-action-btn" id="zoomIn" type="button" title="Zoom in" data-tooltip="Zoom in" aria-label="Zoom in">+</button>
+            </div>
+
+            <label class="search-box">
+              <span class="sr-only">Cari node refinery</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+              <input id="nodeSearch" type="search" autocomplete="off" placeholder="Cari node atau tag…">
+            </label>
+
+            <div class="view-status status-pill" id="viewStatus" aria-live="polite">Canvas 6000 x 3600</div>
+            <div class="cdu-run-panel" id="cduRunPanel" aria-label="CDU mass balance controls">
+              <div class="action-group primary-action-group" role="group" aria-label="Aksi utama mass balance">
+                <button class="cdu-start-button admin-button admin-button-primary" id="cduStartBalance" type="button">Start</button>
+                <button class="cdu-ghost-button admin-button" id="cduResetCalculation" type="button">Reset</button>
+                <button class="icon-action-btn ai-analyze-button" id="aiAnalyzeBalanceButton" type="button" title="AI Analyze (read-only)" data-tooltip="AI Analyze" aria-label="Analyze mass balance with AI">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.35 4.15L17.5 8.5l-4.15 1.35L12 14l-1.35-4.15L6.5 8.5l4.15-1.35L12 3Z"></path><path d="m18.5 14 .8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z"></path></svg>
+                  <span class="sr-only">AI Analyze</span>
+                </button>
+                <div class="cdu-blend-control" id="cduBlendControl">
+                  <button class="cdu-ghost-button cdu-blend-toggle" id="cduBlendToggle" type="button" aria-expanded="false" aria-controls="cduBlendPanel">Crude Blend</button>
+                <div class="cdu-blend-panel is-hidden" id="cduBlendPanel" aria-label="Crude Blend Input">
+                  <div class="cdu-blend-panel-header">
+                    <strong>Crude Blend</strong>
+                    <button class="cdu-blend-close" id="cduBlendClose" type="button" aria-label="Close crude blend">x</button>
+                  </div>
+                  <div class="cdu-blend-head">
+                    <span>Name</span>
+                    <span>SG</span>
+                    <span>Flow</span>
+                    <span>Unit</span>
+                    <span>API</span>
+                    <span>Class</span>
+                    <span></span>
+                  </div>
+                  <div class="cdu-blend-rows" id="cduBlendRows"></div>
+                  <div class="cdu-blend-summary" id="cduBlendSummary">Blend not calculated</div>
+                  <div class="cdu-blend-actions">
+                    <button class="admin-button" id="cduBlendAdd" type="button">Add Crude</button>
+                    <button class="admin-button admin-button-primary" id="cduBlendApply" type="button">Apply Blend to Mass Balance</button>
+                  </div>
+                  <p class="cdu-blend-note">Classification based on SG/API only. Final operation should also consider assay, sulfur, salt, water, TAN, viscosity, and product yield.</p>
+                </div>
+              </div>
+              </div>
+
+              <div class="compact-control-row">
+                <label class="cdu-inline-field cdu-run-field crude-type-control">
+                  <span>Crude</span>
+                  <select id="cduCrudeTypeSelect" aria-label="Crude type"></select>
+                </label>
+                <label class="cdu-inline-field cdu-run-field cdu-sg-field">
+                  <span>SG</span>
+                  <input id="cduCrudeSGInput" type="number" min="0.5" max="1.3" step="0.001" value="0.886" aria-label="Specific gravity crude">
+                </label>
+                <div class="cdu-crude-meta" aria-live="polite">
+                  <span class="neutral-badge">API <strong id="cduCrudeAPIValue">28.16</strong></span>
+                  <span class="crude-classification-badge crude-medium" id="cduCrudeClassificationBadge">Medium</span>
+                  <small>Classification based on SG/API only. Final operation should consider assay, sulfur, salt, water, TAN, viscosity, and product yield.</small>
+                </div>
+                <label class="cdu-inline-field cdu-run-field cdu-run-intake cdu-intake-field">
+                  <span>Intake</span>
+                  <input id="cduCrudeIntakeInput" type="number" min="0" step="10" value="400" aria-label="Crude intake cubic meter per hour">
+                  <select id="cduIntakeUnitSelect" aria-label="Crude intake unit">
+                    <option value="m3h">m3/h</option>
+                    <option value="mbsd">MBSD</option>
+                  </select>
+                </label>
+                <span class="cdu-status-badge cdu-run-status" id="cduRunStatus" data-status="notStarted">Not Started</span>
+              </div>
+            </div>
+            <div class="canvas-action-group action-group" role="group" aria-label="Aksi toolbar canvas">
+              <button class="toolbar-icon-button icon-action-btn" id="fitAll" type="button" title="Fit All" data-tooltip="Fit all" aria-label="Fit all canvas">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 3H4a1 1 0 0 0-1 1v4"></path>
+                  <path d="M16 3h4a1 1 0 0 1 1 1v4"></path>
+                  <path d="M21 16v4a1 1 0 0 1-1 1h-4"></path>
+                  <path d="M8 21H4a1 1 0 0 1-1-1v-4"></path>
+                </svg>
+              </button>
+              <button class="toolbar-icon-button icon-action-btn" id="resetView" type="button" title="Reset View" data-tooltip="Reset view" aria-label="Reset view">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 4v6h6"></path>
+                  <path d="M5.5 14a7 7 0 1 0 1.7-7.1L4 10"></path>
+                </svg>
+              </button>
+              <button class="toolbar-icon-button icon-action-btn" id="presentationToggle" type="button" title="Fullscreen" data-tooltip="Fullscreen" aria-pressed="false" aria-label="Masuk presentation mode">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 3H4a1 1 0 0 0-1 1v4"></path>
+                  <path d="M16 3h4a1 1 0 0 1 1 1v4"></path>
+                  <path d="M21 16v4a1 1 0 0 1-1 1h-4"></path>
+                  <path d="M8 21H4a1 1 0 0 1-1-1v-4"></path>
+                </svg>
+              </button>
+              <button class="toolbar-icon-button icon-action-btn startup-mode-toggle" id="startupModeToggle" type="button" title="CDU-V Startup Simulator" data-tooltip="Startup" aria-pressed="false" aria-label="Toggle Startup Mode">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16"></path><path d="m9 7 9 5-9 5V7Z"></path></svg>
+              </button>
+              <button class="toolbar-icon-button icon-action-btn optional-toolbar-action" id="shortcutHelp" type="button" title="Shortcuts" data-tooltip="Shortcuts" aria-label="Buka bantuan shortcut">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+                  <path d="M7 10h.01"></path>
+                  <path d="M11 10h.01"></path>
+                  <path d="M15 10h.01"></path>
+                  <path d="M7 14h10"></path>
+                </svg>
+              </button>
+            <div class="history-toolbar" role="group" aria-label="History editor">
+              <button class="toolbar-icon-button icon-action-btn" id="undoButton" type="button" title="Undo" data-tooltip="Undo" aria-label="Undo" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 7H4v5"></path>
+                  <path d="M5 12a8 8 0 1 0 2.4-5.7"></path>
+                </svg>
+              </button>
+              <button class="toolbar-icon-button icon-action-btn" id="redoButton" type="button" title="Redo" data-tooltip="Redo" aria-label="Redo" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M15 7h5v5"></path>
+                  <path d="M19 12a8 8 0 1 1-2.4-5.7"></path>
+                </svg>
+              </button>
+            </div>
+            <div class="view-options">
+              <button class="toolbar-icon-button icon-action-btn view-options-toggle" id="viewOptionsToggle" type="button" title="Settings" data-tooltip="Settings" aria-label="View Options" aria-expanded="false" aria-controls="viewOptionsPopover">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 7h10"></path>
+                  <path d="M18 7h2"></path>
+                  <circle cx="16" cy="7" r="2"></circle>
+                  <path d="M4 17h2"></path>
+                  <path d="M10 17h10"></path>
+                  <circle cx="8" cy="17" r="2"></circle>
+                  <path d="M4 12h5"></path>
+                  <path d="M13 12h7"></path>
+                  <circle cx="11" cy="12" r="2"></circle>
+                </svg>
+              </button>
+              <div class="view-options-popover is-hidden" id="viewOptionsPopover">
+                <label class="view-option-field">
+                  <span>Node Font Scale</span>
+                  <select id="nodeFontScaleGlobal">
+                    <option value="0.8">80%</option>
+                    <option value="1">100%</option>
+                    <option value="1.2">120%</option>
+                    <option value="1.4">140%</option>
+                  </select>
+                </label>
+                <label class="view-option-field">
+                  <span>Node Icon Scale</span>
+                  <select id="nodeIconScaleGlobal">
+                    <option value="0.8">80%</option>
+                    <option value="1">100%</option>
+                    <option value="1.2">120%</option>
+                    <option value="1.4">140%</option>
+                  </select>
+                </label>
+                <label class="view-option-field">
+                  <span>Stream Labels</span>
+                  <select id="streamLabelModeGlobal">
+                    <option value="hidden">Hidden</option>
+                    <option value="hover">Hover</option>
+                    <option value="selected">Selected</option>
+                    <option value="always">Always</option>
+                  </select>
+                </label>
+                <label class="view-option-field">
+                  <span>Port Labels</span>
+                  <select id="portLabelModeGlobal">
+                    <option value="off">Off</option>
+                    <option value="important">Important</option>
+                    <option value="hover">Hover</option>
+                    <option value="all">All</option>
+                  </select>
+                </label>
+                <label class="view-option-field">
+                  <span>Port Label Size</span>
+                  <input id="portLabelFontSizeGlobal" type="range" min="8" max="18" step="1" value="10">
+                </label>
+                <label class="view-option-field">
+                  <span>Port Label Scale</span>
+                  <select id="portLabelScaleGlobal">
+                    <option value="0.8">80%</option>
+                    <option value="1">100%</option>
+                    <option value="1.2">120%</option>
+                    <option value="1.4">140%</option>
+                  </select>
+                </label>
+                <label class="view-option-field">
+                  <span>Port Label Weight</span>
+                  <select id="portLabelWeightGlobal">
+                    <option value="normal">normal</option>
+                    <option value="500">500</option>
+                    <option value="600">600</option>
+                    <option value="700">700</option>
+                    <option value="bold">bold</option>
+                  </select>
+                </label>
+                <label class="view-option-field">
+                  <span>Port Label Color</span>
+                  <input id="portLabelColorGlobal" type="color" value="#10233f">
+                </label>
+                <button class="admin-button" id="portLabelColorResetGlobal" type="button">Reset Port Color</button>
+                <label class="admin-check view-option-check">
+                  <input id="gridVisibleToggle" type="checkbox" checked>
+                  <span>Grid</span>
+                </label>
+                <label class="admin-check view-option-check">
+                  <input id="snapToGridToggle" type="checkbox">
+                  <span>Snap to Grid</span>
+                </label>
+                <label class="view-option-field">
+                  <span>Grid Size</span>
+                  <select id="gridSizeSelect">
+                    <option value="10">10 px</option>
+                    <option value="20">20 px</option>
+                    <option value="40">40 px</option>
+                    <option value="80">80 px</option>
+                  </select>
+                </label>
+                <label class="admin-check view-option-check">
+                  <input id="selectStreamOnHover" type="checkbox">
+                  <span>Select stream on hover</span>
+                </label>
+                <label class="admin-check view-option-check">
+                  <input id="streamBridgesToggle" type="checkbox" checked>
+                  <span>Stream Bridges</span>
+                </label>
+                <label class="admin-check view-option-check">
+                  <input id="preferPolylineToggle" type="checkbox" checked>
+                  <span>Prefer Polyline PFD</span>
+                </label>
+                <label class="admin-check view-option-check">
+                  <input id="autoStraightAlignedToggle" type="checkbox" checked>
+                  <span>Auto-straight aligned streams</span>
+                </label>
+                <label class="admin-check view-option-check">
+                  <input id="simplifiedViewOption" type="checkbox" checked>
+                  <span>Simplified View</span>
+                </label>
+                <label class="admin-check view-option-check">
+                  <input id="showNodeBalanceOption" type="checkbox" checked>
+                  <span>Show Node Balance</span>
+                </label>
+                <label class="admin-check view-option-check">
+                  <input id="showPortFlowOption" type="checkbox" checked>
+                  <span>Show Port Flow</span>
+                </label>
+                <label class="view-option-field">
+                  <span>Port Flow Mode</span>
+                  <select id="portFlowModeSelect">
+                    <option value="full">Full</option>
+                    <option value="compact">Compact</option>
+                    <option value="off">Off</option>
+                  </select>
+                </label>
+                <label class="view-option-field">
+                  <span>Port Value Display</span>
+                  <select id="portValueDisplayGlobal">
+                    <option value="off">Off</option>
+                    <option value="m3h">M3/h</option>
+                    <option value="mbsd">MBSD</option>
+                    <option value="both">M3/h + MBSD</option>
+                  </select>
+                </label>
+                <label class="view-option-field">
+                  <span>Port Info Layout</span>
+                  <select id="portInfoLayoutGlobal">
+                    <option value="auto">Auto</option>
+                    <option value="stacked">Stacked</option>
+                    <option value="inline">Inline</option>
+                  </select>
+                </label>
+                <label class="view-option-field">
+                  <span>Port Info Scale</span>
+                  <select id="portInfoScaleGlobal">
+                    <option value="0.8">80%</option>
+                    <option value="1">100%</option>
+                    <option value="1.2">120%</option>
+                  </select>
+                </label>
+                <div class="view-option-section">
+                  <strong>Canvas Editing</strong>
+                  <label class="admin-check view-option-check">
+                    <input id="canvasFirstEditToggle" type="checkbox" checked>
+                    <span>Canvas First</span>
+                  </label>
+                  <label class="admin-check view-option-check">
+                    <input id="autoHideDetailEditToggle" type="checkbox" checked>
+                    <span>Auto-hide Detail</span>
+                  </label>
+                  <label class="admin-check view-option-check">
+                    <input id="autoCollapseAdminEditToggle" type="checkbox" checked>
+                    <span>Auto-collapse Admin</span>
+                  </label>
+                </div>
+                <label class="admin-check view-option-check">
+                  <input id="pidSymbolsLayerToggle" type="checkbox" checked>
+                  <span>P&ID Symbols</span>
+                </label>
+                <label class="admin-check view-option-check">
+                  <input id="pidConnectorsLayerToggle" type="checkbox" checked>
+                  <span>P&ID Connectors</span>
+                </label>
+                <div class="view-option-section">
+                  <strong>Layers</strong>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="areas" type="checkbox" checked><span>Areas</span></label>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="nodes" type="checkbox" checked><span>Nodes</span></label>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="streams" type="checkbox" checked><span>Streams</span></label>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="ports" type="checkbox" checked><span>Ports</span></label>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="portLabels" type="checkbox" checked><span>Port Labels</span></label>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="streamLabels" type="checkbox" checked><span>Stream Labels</span></label>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="utilityStreams" type="checkbox" checked><span>Utility Streams</span></label>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="gasStreams" type="checkbox" checked><span>Gas Streams</span></label>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="productStreams" type="checkbox" checked><span>Product Streams</span></label>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="heavyStreams" type="checkbox" checked><span>Heavy Streams</span></label>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="catalystStreams" type="checkbox" checked><span>Catalyst Streams</span></label>
+                  <label class="admin-check view-option-check"><input data-layer-toggle="sourStreams" type="checkbox" checked><span>Sour Streams</span></label>
+                </div>
+              </div>
+            </div>
+            <div class="pid-palette-wrapper">
+              <button class="toolbar-icon-button icon-action-btn pid-palette-toggle" id="pidPaletteToggle" type="button" title="Node tools" data-tooltip="Node tools" aria-label="Buka P&ID Symbol Palette" aria-expanded="false" aria-controls="pidPalette">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 6h6v5H4z"></path>
+                  <path d="M14 5h6v6h-6z"></path>
+                  <path d="M5 17h14"></path>
+                  <path d="M8 14v6"></path>
+                  <circle cx="16" cy="17" r="2"></circle>
+                </svg>
+              </button>
+              <div class="pid-palette is-hidden" id="pidPalette" aria-label="P&ID Symbol Palette">
+                <div class="pid-palette-header">
+                  <strong>P&ID Symbols</strong>
+                  <label class="admin-check">
+                    <input id="pidPinTool" type="checkbox">
+                    <span>Pin tool</span>
+                  </label>
+                </div>
+                <input class="pid-symbol-search" id="pidSymbolSearch" type="search" placeholder="Search symbol...">
+                <div class="pid-palette-groups" id="pidPaletteGroups"></div>
+              </div>
+            </div>
+            <div class="theme-preset-control" id="themePresetControl">
+              <button class="toolbar-icon-button icon-action-btn theme-icon-toggle" id="themeToggle" type="button" title="Color themes" data-tooltip="Theme" aria-label="Choose color theme" aria-expanded="false" aria-controls="themePresetPopover">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3a9 9 0 1 0 0 18h1.2a1.8 1.8 0 0 0 0-3.6h-.7a1.7 1.7 0 0 1 0-3.4H15a6 6 0 0 0 0-12h-3Z"></path>
+                  <circle cx="7.5" cy="10" r="1"></circle>
+                  <circle cx="10" cy="6.8" r="1"></circle>
+                  <circle cx="15" cy="7" r="1"></circle>
+                  <circle cx="17.2" cy="10.5" r="1"></circle>
+                </svg>
+              </button>
+              <div class="theme-preset-popover is-hidden" id="themePresetPopover" role="menu" aria-label="Color theme presets">
+                <div class="theme-preset-heading">
+                  <strong>Color theme</strong>
+                  <span>Canvas &amp; panels</span>
+                </div>
+                <button class="theme-preset-option" type="button" role="menuitemradio" data-theme-preset="light" aria-checked="false">
+                  <span class="theme-preview" aria-hidden="true"><i style="--preview:#eef5ff"></i><i style="--preview:#ffffff"></i><i style="--preview:#0f6bdc"></i></span><span>Light</span>
+                </button>
+                <button class="theme-preset-option" type="button" role="menuitemradio" data-theme-preset="night" aria-checked="false">
+                  <span class="theme-preview" aria-hidden="true"><i style="--preview:#07111f"></i><i style="--preview:#0f1c30"></i><i style="--preview:#38bdf8"></i></span><span>Night</span>
+                </button>
+                <button class="theme-preset-option" type="button" role="menuitemradio" data-theme-preset="graphite" aria-checked="false">
+                  <span class="theme-preview" aria-hidden="true"><i style="--preview:#181818"></i><i style="--preview:#303030"></i><i style="--preview:#a34061"></i></span><span>Graphite</span>
+                </button>
+                <button class="theme-preset-option" type="button" role="menuitemradio" data-theme-preset="ocean" aria-checked="false">
+                  <span class="theme-preview" aria-hidden="true"><i style="--preview:#071a2d"></i><i style="--preview:#0d2b46"></i><i style="--preview:#14b8d4"></i></span><span>Ocean</span>
+                </button>
+                <button class="theme-preset-option" type="button" role="menuitemradio" data-theme-preset="industrial" aria-checked="false">
+                  <span class="theme-preview" aria-hidden="true"><i style="--preview:#202326"></i><i style="--preview:#34393d"></i><i style="--preview:#d28b36"></i></span><span>Industrial</span>
+                </button>
+              </div>
+            </div>
+            </div>
+          </div>
+
+          <div class="scope-toolbar" id="scopeToolbar" aria-label="Scope peta refinery">
+            <div class="scope-actions">
+              <button class="scope-button" id="scopeBack" type="button" aria-label="Kembali ke scope sebelumnya">Back</button>
+              <button class="scope-button scope-button-primary" id="scopeOverview" type="button">Refinery Overview</button>
+              <label class="scope-toggle">
+                <input id="simplifiedView" type="checkbox" checked>
+                <span>Simplified</span>
+              </label>
+            </div>
+            <nav class="scope-breadcrumb" id="scopeBreadcrumb" aria-label="Breadcrumb scope">Refinery Overview</nav>
+            <div class="scope-sections" id="scopeSections" aria-label="Section unit aktif"></div>
+          </div>
+
+          <div class="presentation-bar is-hidden" id="presentationBar" aria-label="Kontrol presentation mode">
+            <div class="presentation-title">
+              <strong>Presentation</strong>
+              <span>Esc exit · Arrows navigate · F fit · R reset</span>
+            </div>
+            <label class="presentation-select">
+              <span>Area</span>
+              <select id="presentationAreaSelect"></select>
+            </label>
+            <div class="presentation-actions">
+              <button class="tool-button" id="presentationFocusArea" type="button" title="Focus Area">Area</button>
+              <button class="tool-button" id="presentationPrevNode" type="button" aria-label="Node sebelumnya" title="Previous node">Prev</button>
+              <button class="tool-button" id="presentationNextNode" type="button" aria-label="Node berikutnya" title="Next node">Next</button>
+              <button class="tool-button" id="presentationFocusNode" type="button" title="Focus Node">Node</button>
+              <button class="tool-button" id="presentationExit" type="button" title="Exit presentation">Exit</button>
+            </div>
+          </div>
+
+          <div class="search-results is-hidden" id="searchResults" role="listbox" aria-label="Hasil pencarian node"></div>
+          <div class="canvas-empty-state is-hidden" id="canvasEmptyState" role="status" aria-live="polite">
+            <p class="eyebrow">Canvas kosong</p>
+            <h2>Belum ada data untuk ditampilkan</h2>
+            <p id="canvasEmptyMessage">Tambahkan area, node, atau stream dari panel admin untuk mulai membangun peta refinery.</p>
+          </div>
+
+          <div class="canvas-viewport" id="canvasViewport" tabindex="0" aria-label="Big Canvas viewport">
+            <aside class="startup-panel startup-floating-panel is-hidden" id="startupPanel" tabindex="-1" aria-live="polite" aria-label="CDU-V Startup Simulator">
+              <div class="startup-panel-header startup-floating-header" id="startupPanelDragHandle">
+                <div class="startup-floating-heading">
+                  <span class="startup-status-indicator" id="startupStatusIndicator" aria-hidden="true"></span>
+                  <div>
+                    <p class="eyebrow" id="startupSource">STARTUP SIMULATOR</p>
+                    <h3 id="startupTitle">CDU-V Startup Simulation</h3>
+                    <p id="startupStatusLine">Startup simulation data belum tersedia.</p>
+                  </div>
+                </div>
+                <div class="startup-floating-controls">
+                  <div class="startup-panel-size-switch" id="startupPanelSizeSwitch" aria-label="Startup panel size">
+                    <button type="button" data-startup-panel-size="s" title="Small panel">S</button>
+                    <button type="button" data-startup-panel-size="m" title="Medium panel">M</button>
+                    <button type="button" data-startup-panel-size="l" title="Large panel">L</button>
+                  </div>
+                  <button class="toolbar-icon-button" id="startupPanelMinimize" type="button" title="Minimize Startup Simulator" aria-label="Minimize Startup Simulator">-</button>
+                  <button class="toolbar-icon-button" id="startupPanelResetPosition" type="button" title="Reset panel position" aria-label="Reset panel position">Reset Pos</button>
+                  <button class="toolbar-icon-button" id="startupPanelClose" type="button" title="Hide Startup Simulator" aria-label="Hide Startup Simulator">Hide</button>
+                </div>
+              </div>
+              <div class="startup-floating-body" id="startupPanelBody">
+                <p class="startup-training-note" title="Simulator untuk training dan visualisasi prosedur. Operasi aktual tetap mengikuti STK/TKI resmi, arahan Shift Supervisor, kondisi DCS, HSSE, dan kondisi lapangan.">Training only. Ikuti STK/TKI, DCS, HSSE, dan arahan supervisor.</p>
+                <div class="startup-controls startup-panel-actions" role="group" aria-label="Startup simulation controls">
+                  <button class="admin-button admin-button-primary" id="startupStart" type="button" disabled>Start Simulation</button>
+                  <button class="admin-button" id="startupPause" type="button" disabled>Pause</button>
+                  <button class="admin-button" id="startupReset" type="button" disabled>Reset</button>
+                  <button class="admin-button" id="startupPrev" type="button" disabled>Previous</button>
+                  <button class="admin-button" id="startupNext" type="button" disabled>Next</button>
+                  <button class="admin-button admin-button-primary" id="startupComplete" type="button" disabled>Complete</button>
+                  <button class="admin-button" id="startupNotReady" type="button" disabled>Not Ready</button>
+                </div>
+                <div class="startup-stage-tabs" id="startupStageTabs" aria-label="Startup stages"></div>
+                <div class="startup-progress startup-panel-progress" id="startupProgress">0 / 0 complete</div>
+                <div class="startup-panel-log">
+                  <div class="startup-empty-state" id="startupEmptyState">
+                    Startup simulation data belum tersedia. Pastikan file data/startup-cdu-v-simulation.json ada dan valid.
+                  </div>
+                  <div class="startup-step-card is-hidden" id="startupStepCard">
+                    <p class="startup-empty-message">Klik Startup Mode lalu Start Simulation.</p>
+                  </div>
+                  <div class="startup-report is-hidden" id="startupReport"></div>
+                </div>
+              </div>
+            </aside>
+            <section class="cdu-floating-table cdu-floating-tables" id="cduFloatingTables" aria-label="CDU Mass Balance Tables">
+              <div class="cdu-floating-table-header cdu-floating-header" id="cduFloatingTableDragHandle">
+                <div>
+                  <p class="eyebrow">CDU Mass Balance</p>
+                  <h3 id="cduFloatingTitle">CDU Mass Balance</h3>
+                  <p id="cduFloatingMeta">Start mass balance to view CDU tables.</p>
+                </div>
+                <div class="cdu-floating-actions">
+                  <div class="cdu-table-size-toggle" id="cduTableSizeToggle" aria-label="CDU table size">
+                    <button type="button" data-cdu-table-size="small" title="Small table">S</button>
+                    <button type="button" data-cdu-table-size="medium" title="Medium table">M</button>
+                    <button type="button" data-cdu-table-size="large" title="Large table">L</button>
+                  </div>
+                  <button class="toolbar-icon-button" id="cduTablesCollapse" type="button" title="Collapse CDU tables" aria-label="Collapse CDU tables">-</button>
+                  <button class="toolbar-icon-button" id="cduTablesResetPosition" type="button" title="Reset table position" aria-label="Reset table position">Reset Pos</button>
+                  <button class="toolbar-icon-button" id="cduTablesHide" type="button" title="Hide CDU tables" aria-label="Hide CDU tables">Hide</button>
+                </div>
+              </div>
+              <div class="cdu-floating-table-body cdu-floating-content" id="cduFloatingContent"></div>
+            </section>
+            <button class="admin-button cdu-floating-show is-hidden" id="cduTablesShow" type="button">Show Tables</button>
+            <div class="big-canvas-stage" id="canvasStage">
+              <svg class="stream-layer" id="streamLayer" width="6000" height="3600" viewBox="0 0 6000 3600" aria-label="Stream refinery"></svg>
+              <div class="area-layer" id="areaLayer"></div>
+              <svg class="pid-symbol-layer" id="pidSymbolLayer" width="6000" height="3600" viewBox="0 0 6000 3600" aria-label="P&ID symbols"></svg>
+              <div class="node-layer" id="nodeLayer"></div>
+              <div class="stream-point-layer" id="streamPointLayer" aria-label="Editor titik stream"></div>
+              <div class="context-toolbar is-hidden" id="contextToolbar" aria-label="Toolbar konteks editor"></div>
+            </div>
+          </div>
+
+          <div class="minimap-container is-hidden" id="minimapContainer" aria-hidden="true">
+            <div class="minimap-viewport" id="minimapViewport"></div>
+          </div>
+
+          <aside class="quick-inspector is-hidden" id="quickInspector" aria-live="polite" aria-label="Quick inspector">
+            <div class="quick-inspector-header">
+              <div>
+                <p class="quick-inspector-kicker" id="quickInspectorKicker">Selected</p>
+                <h3 id="quickInspectorTitle">Item selected</h3>
+              </div>
+              <button class="quick-inspector-close" id="quickInspectorClose" type="button" aria-label="Tutup quick inspector">x</button>
+            </div>
+            <p class="quick-inspector-meta" id="quickInspectorMeta">-</p>
+            <div class="quick-inspector-actions" id="quickInspectorActions"></div>
+          </aside>
+
+          <div class="presentation-info-overlay is-hidden" id="presentationInfoOverlay" role="status" aria-live="polite">
+            <button class="presentation-overlay-close" id="presentationOverlayClose" type="button" aria-label="Tutup info node">x</button>
+            <button class="presentation-overlay-more" id="presentationOverlayMore" type="button">More</button>
+            <p class="presentation-overlay-kicker" id="presentationOverlayKicker">Node</p>
+            <h2 id="presentationOverlayName">Equipment</h2>
+            <p class="presentation-overlay-tag" id="presentationOverlayTag">TAG</p>
+            <p id="presentationOverlayDescription">-</p>
+          </div>
+
+          <div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <span data-loading-message>Memuat RefineryMap...</span>
+          </div>
+        </section>
+
+        <aside class="detail-panel detail-overlay is-hidden" id="detailPanel" aria-live="polite" aria-hidden="true">
+          <button class="detail-panel-close" id="detailPanelClose" type="button" aria-label="Tutup detail">×</button>
+
+          <div class="empty-detail" id="emptyDetail">
+            <p class="eyebrow">Node detail</p>
+            <h2>Pilih equipment</h2>
+            <p>Pilih node atau stream untuk melihat data teknis.</p>
+          </div>
+
+          <article class="detail-card is-hidden" id="nodeDetail">
+            <div class="detail-header">
+              <span class="detail-unit" id="detailUnit">CDU</span>
+              <span class="status-chip" id="detailStatus">Normal</span>
+            </div>
+            <h2 id="detailName">Equipment</h2>
+            <p class="detail-tag" id="detailTag">TAG</p>
+            <p class="detail-description" id="detailDescription">-</p>
+
+            <div class="detail-actions">
+              <button class="detail-action-button" id="detailOpenUnit" type="button">Open Unit View</button>
+              <button class="detail-action-button" id="detailOpenSection" type="button">Open Section View</button>
+            </div>
+
+            <dl class="detail-grid">
+              <div>
+                <dt>Type</dt>
+                <dd id="detailType">-</dd>
+              </div>
+              <div>
+                <dt>Area</dt>
+                <dd id="detailArea">-</dd>
+              </div>
+              <div>
+                <dt>Temperature</dt>
+                <dd id="detailTemperature">-</dd>
+              </div>
+              <div>
+                <dt>Pressure</dt>
+                <dd id="detailPressure">-</dd>
+              </div>
+            </dl>
+
+            <section class="detail-section">
+              <h3>Function</h3>
+              <ul id="detailFunctions"></ul>
+            </section>
+            <section class="detail-section mass-balance-detail is-hidden" id="detailMassBalance"></section>
+          </article>
+
+          <article class="detail-card is-hidden" id="streamDetail">
+            <div class="detail-header">
+              <span class="detail-unit" id="streamDetailType">Stream</span>
+              <span class="status-chip" id="streamDetailShape">Curve</span>
+            </div>
+            <h2 id="streamDetailName">Stream dipilih</h2>
+            <p class="detail-tag" id="streamDetailId">STREAM</p>
+            <p class="detail-description" id="streamDetailDescription">Klik stream untuk melihat detail singkat.</p>
+            <dl class="detail-grid">
+              <div>
+                <dt>From</dt>
+                <dd id="streamDetailFrom">-</dd>
+              </div>
+              <div>
+                <dt>To</dt>
+                <dd id="streamDetailTo">-</dd>
+              </div>
+              <div>
+                <dt>Points</dt>
+                <dd id="streamDetailPoints">0</dd>
+              </div>
+              <div>
+                <dt>Stroke</dt>
+                <dd id="streamDetailStroke">-</dd>
+              </div>
+            </dl>
+            <section class="detail-section stream-mass-detail is-hidden" id="streamMassDetail"></section>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <button class="admin-secret-trigger" id="adminSecretTrigger" type="button" aria-label="Pengaturan lanjutan">⚙</button>
+
+    <div class="admin-login-modal is-hidden" id="adminLoginModal" role="dialog" aria-modal="true" aria-labelledby="adminLoginTitle">
+      <form class="admin-login-dialog" id="adminLoginForm">
+        <div>
+          <p class="eyebrow">RefineryMap Admin</p>
+          <h2 id="adminLoginTitle">Login editor</h2>
+          <p>Masuk untuk mengubah area, node, stream, dan menyimpan config Big Canvas.</p>
+        </div>
+
+        <label class="admin-field">
+          <span>Username</span>
+          <input id="adminUsername" name="username" autocomplete="username" required>
+        </label>
+
+        <label class="admin-field">
+          <span>Password</span>
+          <input id="adminPassword" name="password" type="password" autocomplete="current-password" required>
+        </label>
+
+        <p class="admin-login-error" id="adminLoginError" role="alert"></p>
+
+        <div class="admin-form-actions">
+          <button class="admin-button admin-button-primary" type="submit">Login</button>
+          <button class="admin-button" id="adminLoginCancel" type="button">Batal</button>
+        </div>
+      </form>
+    </div>
+
+    <aside class="admin-panel is-hidden" id="adminPanel" aria-label="RefineryMap Admin Panel">
+      <div class="admin-panel-header">
+        <div>
+          <p class="eyebrow">RefineryMap Admin</p>
+          <h2>Big Canvas Editor</h2>
+        </div>
+        <div class="admin-header-actions">
+          <button class="admin-icon-button" id="adminPanelCollapse" type="button" aria-label="Collapse admin panel" aria-expanded="true">‹</button>
+          <button class="admin-icon-button" id="adminPanelClose" type="button" aria-label="Tutup admin panel">×</button>
+        </div>
+      </div>
+
+      <nav class="admin-collapsed-tabs" aria-label="Admin collapsed tabs">
+        <button type="button" data-admin-collapsed-tab="area" title="Area" aria-label="Area">A</button>
+        <button type="button" data-admin-collapsed-tab="node" title="Node" aria-label="Node">N</button>
+        <button type="button" data-admin-collapsed-tab="stream" title="Stream" aria-label="Stream">S</button>
+        <button type="button" data-admin-collapsed-tab="pid" title="P&ID" aria-label="P&ID">P</button>
+        <button type="button" data-admin-collapsed-tab="config" title="Config" aria-label="Config">C</button>
+      </nav>
+
+      <div class="admin-session-row">
+        <span class="admin-status-pill" id="adminStatusPill">Admin aktif</span>
+        <span class="admin-status-pill save-indicator" id="autosaveIndicator" aria-live="polite">Siap</span>
+        <label class="admin-edit-toggle">
+          <input id="adminEditMode" type="checkbox">
+          <span>Edit Mode</span>
+        </label>
+        <button class="admin-button admin-button-light" id="adminLogout" type="button">Logout</button>
+      </div>
+
+      <p class="admin-helper" id="adminModeHint">Edit Mode OFF. Data dapat dilihat, perubahan dinonaktifkan.</p>
+
+      <nav class="admin-tabs" aria-label="Tab admin">
+        <button class="admin-tab is-active" type="button" data-admin-tab="area">Area</button>
+        <button class="admin-tab" type="button" data-admin-tab="node">Node</button>
+        <button class="admin-tab" type="button" data-admin-tab="stream">Stream</button>
+        <button class="admin-tab" type="button" data-admin-tab="pid">P&ID</button>
+        <button class="admin-tab" type="button" data-admin-tab="config">Config</button>
+      </nav>
+
+      <div class="admin-tab-panel is-active" id="adminTabArea" data-admin-panel="area">
+        <div class="admin-section-title">
+          <h3>Area</h3>
+          <button class="admin-button admin-requires-edit" id="adminAreaNew" type="button">Tambah Area</button>
+        </div>
+        <label class="admin-field">
+          <span>Pilih area</span>
+          <select id="adminAreaSelect"></select>
+        </label>
+        <div class="admin-grid">
+          <label class="admin-field"><span>ID</span><input class="admin-editable" id="adminAreaId"></label>
+          <label class="admin-field"><span>Nama</span><input class="admin-editable" id="adminAreaName"></label>
+          <label class="admin-field admin-field-wide"><span>Subtitle</span><input class="admin-editable" id="adminAreaSubtitle"></label>
+          <label class="admin-field"><span>X</span><input class="admin-editable" id="adminAreaX" type="number"></label>
+          <label class="admin-field"><span>Y</span><input class="admin-editable" id="adminAreaY" type="number"></label>
+          <label class="admin-field"><span>Width</span><input class="admin-editable" id="adminAreaWidth" type="number"></label>
+          <label class="admin-field"><span>Height</span><input class="admin-editable" id="adminAreaHeight" type="number"></label>
+          <label class="admin-field"><span>Color</span><input class="admin-editable" id="adminAreaColor" type="color"></label>
+          <label class="admin-check admin-field-wide">
+            <input class="admin-editable" id="adminAreaLocked" type="checkbox">
+            <span>Lock area position</span>
+          </label>
+        </div>
+        <div class="admin-form-actions">
+          <button class="admin-button admin-button-primary admin-requires-edit" id="adminAreaSave" type="button">Simpan Area</button>
+          <button class="admin-button admin-button-danger admin-requires-edit" id="adminAreaDelete" type="button">Hapus Area</button>
+        </div>
+      </div>
+
+      <div class="admin-tab-panel" id="adminTabNode" data-admin-panel="node">
+        <div class="admin-section-title">
+          <h3>Node</h3>
+          <button class="admin-button admin-requires-edit" id="adminNodeNew" type="button">Tambah Node</button>
+        </div>
+        <label class="admin-field">
+          <span>Pilih node</span>
+          <select id="adminNodeSelect"></select>
+        </label>
+        <div class="admin-node-preview" id="adminNodePreview" aria-live="polite">
+          <div class="admin-node-preview-card">
+            <span id="adminNodePreviewTag">TAG</span>
+            <strong id="adminNodePreviewName">Node preview</strong>
+            <small id="adminNodePreviewMeta">Medium / Normal</small>
+          </div>
+        </div>
+
+        <section class="admin-form-section">
+          <h4>Basic</h4>
+          <div class="admin-grid">
+            <label class="admin-field"><span>Tag</span><input class="admin-editable" id="adminNodeTag"></label>
+            <label class="admin-field"><span>Nama</span><input class="admin-editable" id="adminNodeName"></label>
+            <label class="admin-field"><span>Unit</span><input class="admin-editable" id="adminNodeUnit"></label>
+            <label class="admin-field"><span>Type</span><input class="admin-editable" id="adminNodeType"></label>
+            <label class="admin-field"><span>Area</span><input class="admin-editable" id="adminNodeArea"></label>
+            <label class="admin-field">
+              <span>Status</span>
+              <select class="admin-editable" id="adminNodeStatus">
+                <option>Normal</option>
+                <option>Warning</option>
+                <option>Alarm</option>
+                <option>Offline</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <h4>Position &amp; Size</h4>
+          <div class="admin-grid">
+            <label class="admin-field"><span>X</span><input class="admin-editable" id="adminNodeX" type="number"></label>
+            <label class="admin-field"><span>Y</span><input class="admin-editable" id="adminNodeY" type="number"></label>
+            <label class="admin-field admin-field-wide">
+              <span>Ukuran Node</span>
+              <select class="admin-editable" id="adminNodeSizePreset">
+                <option value="small">Small - 120 x 70</option>
+                <option value="medium">Medium - 180 x 95</option>
+                <option value="large">Large - 240 x 120</option>
+                <option value="custom">Custom</option>
+              </select>
+            </label>
+            <label class="admin-field"><span>Width</span><input class="admin-editable" id="adminNodeWidth" type="number"></label>
+            <label class="admin-field"><span>Height</span><input class="admin-editable" id="adminNodeHeight" type="number"></label>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <h4>Edit Tools</h4>
+          <div class="admin-grid">
+            <label class="admin-field admin-field-wide">
+              <span>Scale Node</span>
+              <input class="admin-editable" id="adminNodeScale" type="range" min="0.5" max="2.5" step="0.1" value="1">
+            </label>
+          </div>
+          <div class="admin-form-actions admin-scale-actions">
+            <button class="admin-button admin-requires-edit" id="adminNodeScale75" type="button">75%</button>
+            <button class="admin-button admin-requires-edit" id="adminNodeScale100" type="button">100%</button>
+            <button class="admin-button admin-requires-edit" id="adminNodeScale125" type="button">125%</button>
+            <button class="admin-button admin-requires-edit" id="adminNodeScale150" type="button">150%</button>
+            <button class="admin-button admin-requires-edit" id="adminNodeResetSize" type="button">Reset Size</button>
+          </div>
+          <div class="admin-form-actions admin-copy-actions">
+            <button class="admin-button admin-requires-edit" id="adminNodeCopy" type="button">Copy Node</button>
+            <button class="admin-button admin-requires-edit" id="adminNodePaste" type="button">Paste Node</button>
+            <button class="admin-button admin-button-primary admin-requires-edit" id="adminNodeDuplicate" type="button">Duplicate Node</button>
+          </div>
+        </section>
+
+        <details class="admin-form-section admin-detail-section">
+          <summary>Visual Style</summary>
+          <div class="admin-grid">
+            <label class="admin-field"><span>Tag Font Size</span><input class="admin-editable" id="adminNodeTagFontSize" type="number" min="8" max="32" step="1"></label>
+            <label class="admin-field"><span>Name Font Size</span><input class="admin-editable" id="adminNodeNameFontSize" type="number" min="8" max="28" step="1"></label>
+            <label class="admin-field"><span>Meta Font Size</span><input class="admin-editable" id="adminNodeMetaFontSize" type="number" min="8" max="24" step="1"></label>
+            <label class="admin-field"><span>Font Weight</span>
+              <select class="admin-editable" id="adminNodeFontWeight">
+                <option value="normal">normal</option>
+                <option value="500">500</option>
+                <option value="600">600</option>
+                <option value="700">700</option>
+                <option value="800">800</option>
+                <option value="bold">bold</option>
+              </select>
+            </label>
+            <label class="admin-field"><span>Font Style</span>
+              <select class="admin-editable" id="adminNodeFontStyle">
+                <option value="normal">normal</option>
+                <option value="italic">italic</option>
+              </select>
+            </label>
+            <label class="admin-field"><span>Font Color</span><input class="admin-editable" id="adminNodeFontColor" type="color" value="#10233f" data-default="true"></label>
+            <label class="admin-field"><span>Icon Size</span><input class="admin-editable" id="adminNodeIconSize" type="number" min="16" max="72" step="2"></label>
+            <label class="admin-field"><span>Icon Color</span><input class="admin-editable" id="adminNodeIconColor" type="color" value="#0f4ea8" data-default="true"></label>
+            <label class="admin-field admin-field-wide"><span>Icon Scale</span><input class="admin-editable" id="adminNodeIconScale" type="range" min="0.5" max="2" step="0.1" value="1"></label>
+            <label class="admin-field"><span>Port Label Font Size</span><input class="admin-editable" id="adminNodePortLabelFontSize" type="number" min="8" max="18" step="1"></label>
+            <label class="admin-field"><span>Port Label Weight</span>
+              <select class="admin-editable" id="adminNodePortLabelWeight">
+                <option value="">Default</option>
+                <option value="normal">normal</option>
+                <option value="500">500</option>
+                <option value="600">600</option>
+                <option value="700">700</option>
+                <option value="bold">bold</option>
+              </select>
+            </label>
+            <label class="admin-field"><span>Port Label Color</span><input class="admin-editable" id="adminNodePortLabelColor" type="color" value="#10233f" data-default="true"></label>
+          </div>
+          <div class="admin-form-actions">
+            <button class="admin-button admin-requires-edit" id="adminNodeFontColorReset" type="button">Reset Font Color</button>
+            <button class="admin-button admin-requires-edit" id="adminNodeIconColorReset" type="button">Reset Icon Color</button>
+            <button class="admin-button admin-requires-edit" id="adminNodePortLabelReset" type="button">Reset Port Label Style</button>
+            <button class="admin-button admin-button-primary admin-requires-edit" id="adminNodeVisualReset" type="button">Reset Visual Style</button>
+          </div>
+        </details>
+
+        <details class="admin-form-section admin-detail-section">
+          <summary>Detail</summary>
+          <div class="admin-grid">
+            <label class="admin-field"><span>Temperature</span><input class="admin-editable" id="adminNodeTemperature"></label>
+            <label class="admin-field"><span>Pressure</span><input class="admin-editable" id="adminNodePressure"></label>
+            <label class="admin-field admin-field-wide"><span>Deskripsi</span><textarea class="admin-editable" id="adminNodeDescription" rows="3"></textarea></label>
+            <label class="admin-field admin-field-wide"><span>Fungsi utama, satu baris per item</span><textarea class="admin-editable" id="adminNodeFunctions" rows="4"></textarea></label>
+          </div>
+        </details>
+        <details class="admin-form-section admin-detail-section">
+          <summary>Mass Balance</summary>
+          <div class="admin-grid">
+            <label class="admin-field">
+              <span>Balance Type</span>
+              <select class="admin-editable" id="adminNodeBalanceType">
+                <option value="none">none</option>
+                <option value="simple">simple</option>
+                <option value="splitBased">splitBased</option>
+                <option value="source">source</option>
+                <option value="passThrough">passThrough</option>
+                <option value="separator">separator</option>
+                <option value="productPool">productPool</option>
+              </select>
+            </label>
+            <label class="admin-field">
+              <span>Balance Scope</span>
+              <select class="admin-editable" id="adminNodeBalanceScope">
+                <option value="node">node</option>
+                <option value="unit">unit</option>
+              </select>
+            </label>
+            <label class="admin-field"><span>Balance Unit</span><input class="admin-editable" id="adminNodeBalanceUnit" placeholder="CDU"></label>
+            <label class="admin-field"><span>Tolerance %</span><input class="admin-editable" id="adminNodeTolerancePercent" type="number" min="0" step="0.01"></label>
+            <label class="admin-field"><span>Product Name</span><input class="admin-editable" id="adminNodeProductName" placeholder="Light Gasoil"></label>
+            <label class="admin-field"><span>Product Group</span><input class="admin-editable" id="adminNodeProductGroup" placeholder="CDU"></label>
+            <label class="admin-field"><span>Product Order</span><input class="admin-editable" id="adminNodeProductOrder" type="number" step="1"></label>
+            <label class="admin-check">
+              <input class="admin-editable" id="adminNodeIncludeProductTable" type="checkbox">
+              <span>Include in Product Table</span>
+            </label>
+            <label class="admin-field admin-field-wide">
+              <span>Split Model JSON</span>
+              <textarea class="admin-editable" id="adminNodeSplitModel" rows="8" spellcheck="false"></textarea>
+            </label>
+          </div>
+          <p class="admin-helper" id="adminNodeProductPoolInfo">Product pool incoming streams: -</p>
+          <p class="admin-helper" id="adminNodeSplitModelStatus">Split model total: -</p>
+        </details>
+        <details class="admin-form-section admin-detail-section">
+          <summary>Ports</summary>
+          <p class="admin-helper">Format port: id | label | side | offset. Contoh: feed | Feed | left | 0.5</p>
+          <div class="admin-grid">
+            <label class="admin-field admin-field-wide"><span>Input ports</span><small>Format: id | label | side | offset | important</small><textarea class="admin-editable" id="adminNodeInputPorts" rows="4"></textarea></label>
+            <label class="admin-field admin-field-wide"><span>Output ports</span><small>Gunakan true/yes/1 pada kolom important untuk label prioritas.</small><textarea class="admin-editable" id="adminNodeOutputPorts" rows="4"></textarea></label>
+          </div>
+          <div class="admin-form-actions">
+            <button class="admin-button admin-requires-edit" id="adminNodePortsDefault" type="button">Use Default Ports</button>
+            <button class="admin-button admin-requires-edit" id="adminNodePortsColumn" type="button">Use Column Ports</button>
+            <button class="admin-button admin-requires-edit" id="adminNodePortsReactor" type="button">Use Reactor Ports</button>
+            <button class="admin-button admin-requires-edit" id="adminNodePortsProduct" type="button">Use Product Pool Ports</button>
+            <button class="admin-button admin-requires-edit" id="adminNodePortsUtility" type="button">Use Utility Header Ports</button>
+          </div>
+        </details>
+        <details class="admin-form-section admin-detail-section">
+          <summary>Advanced Visibility</summary>
+          <div class="admin-grid">
+            <label class="admin-field"><span>Section</span><input class="admin-editable" id="adminNodeSection"></label>
+            <label class="admin-field"><span>Level</span><input class="admin-editable" id="adminNodeLevel" placeholder="unit"></label>
+            <label class="admin-field admin-field-wide"><span>Visible in (comma)</span><input class="admin-editable" id="adminNodeVisibleIn" placeholder="refinery, unit, section"></label>
+            <label class="admin-check admin-field-wide">
+              <input class="admin-editable" id="adminNodeIsMajor" type="checkbox">
+              <span>Major node di overview</span>
+            </label>
+          </div>
+        </details>
+        <div class="admin-form-actions">
+          <button class="admin-button admin-button-primary admin-requires-edit" id="adminNodeSave" type="button">Simpan Node</button>
+          <button class="admin-button admin-button-danger admin-requires-edit" id="adminNodeDelete" type="button">Hapus Node</button>
+        </div>
+      </div>
+
+      <div class="admin-tab-panel" id="adminTabStream" data-admin-panel="stream">
+        <div class="admin-section-title">
+          <h3>Stream</h3>
+          <button class="admin-button admin-requires-edit" id="adminStreamNew" type="button">Tambah Stream</button>
+        </div>
+        <label class="admin-field">
+          <span>Pilih stream</span>
+          <select id="adminStreamSelect"></select>
+        </label>
+        <section class="admin-form-section stream-canvas-editor">
+          <div class="admin-section-title">
+            <div>
+              <h3>Canvas Edit</h3>
+              <p class="admin-helper">Edit stream langsung di canvas: create, reconnect, titik belok, reset, atau delete.</p>
+            </div>
+          </div>
+          <div class="stream-editor-status" id="adminStreamCanvasInfo">Pilih stream untuk mulai edit visual.</div>
+          <div class="stream-route-status" id="adminStreamRouteStatus" aria-live="polite">Route: -</div>
+          <div class="admin-form-actions stream-canvas-actions">
+            <button class="admin-button admin-requires-edit" id="adminStreamCreateCanvas" type="button">Create Stream</button>
+            <button class="admin-button admin-requires-edit" id="adminStreamPickFrom" type="button">Pick From</button>
+            <button class="admin-button admin-requires-edit" id="adminStreamPickTo" type="button">Pick To</button>
+            <button class="admin-button admin-requires-edit" id="adminStreamAddPoint" type="button">Add Point</button>
+            <button class="admin-button admin-button-danger admin-requires-edit" id="adminStreamDeletePoint" type="button">Delete Selected Point</button>
+            <button class="admin-button admin-requires-edit" id="adminStreamConvertCable" type="button">Convert to Cable</button>
+            <button class="admin-button admin-requires-edit" id="adminStreamConvertPolyline" type="button">Convert to Polyline</button>
+            <button class="admin-button admin-requires-edit" id="adminStreamResetPath" type="button">Reset Route</button>
+            <button class="admin-button admin-requires-edit" id="adminStreamAutoFixRoute" type="button">Auto Fix Route</button>
+            <button class="admin-button admin-button-danger admin-requires-edit" id="adminStreamDeleteCanvas" type="button">Delete Stream</button>
+          </div>
+        </section>
+        <div class="admin-grid">
+          <label class="admin-field"><span>ID</span><input class="admin-editable" id="adminStreamId"></label>
+          <label class="admin-field"><span>Label</span><input class="admin-editable" id="adminStreamLabel"></label>
+          <label class="admin-field"><span>From node</span><select class="admin-editable" id="adminStreamFrom"></select></label>
+          <label class="admin-field"><span>From port</span><select class="admin-editable" id="adminStreamFromPort"></select></label>
+          <label class="admin-field"><span>To node</span><select class="admin-editable" id="adminStreamTo"></select></label>
+          <label class="admin-field"><span>To port</span><select class="admin-editable" id="adminStreamToPort"></select></label>
+          <label class="admin-field">
+            <span>Type</span>
+            <select class="admin-editable" id="adminStreamType">
+              <option value="liquid">Liquid</option>
+              <option value="water">Water</option>
+              <option value="gas">Gas</option>
+              <option value="air">Air</option>
+              <option value="solid">Solid / Catalyst</option>
+            </select>
+          </label>
+          <label class="admin-field">
+            <span>Shape</span>
+              <select class="admin-editable" id="adminStreamShape">
+                <option value="polyline">Polyline</option>
+                <option value="cable">Cable</option>
+                <option value="bezier">Bezier</option>
+                <option value="straight">Straight</option>
+                <option value="autoStraight">Auto Straight</option>
+              </select>
+          </label>
+          <label class="admin-field"><span>Stroke width</span><input class="admin-editable" id="adminStreamStrokeWidth" type="number" min="1" max="4" step="0.5"></label>
+          <label class="admin-field">
+            <span>Label mode</span>
+            <select class="admin-editable" id="adminStreamLabelMode">
+              <option value="hover">Hover</option>
+              <option value="always">Always</option>
+            </select>
+          </label>
+          <label class="admin-check">
+            <input class="admin-editable" id="adminStreamAutoRoute" type="checkbox">
+            <span>Auto route</span>
+          </label>
+          <label class="admin-check">
+            <input class="admin-editable" id="adminStreamAvoidNodes" type="checkbox">
+            <span>Hindari node</span>
+          </label>
+        </div>
+        <details class="admin-form-section admin-detail-section">
+          <summary>Advanced Visibility</summary>
+          <div class="admin-grid">
+            <label class="admin-field"><span>Unit</span><input class="admin-editable" id="adminStreamUnit"></label>
+            <label class="admin-field"><span>Section</span><input class="admin-editable" id="adminStreamSection"></label>
+            <label class="admin-field"><span>Category</span><input class="admin-editable" id="adminStreamCategory" placeholder="main/product/gas/utility"></label>
+            <label class="admin-field admin-field-wide"><span>Visible in (comma)</span><input class="admin-editable" id="adminStreamVisibleIn" placeholder="refinery, unit, section"></label>
+            <label class="admin-check admin-field-wide">
+              <input class="admin-editable" id="adminStreamIsMajor" type="checkbox">
+              <span>Major stream di overview</span>
+            </label>
+          </div>
+        </details>
+        <details class="admin-form-section admin-detail-section">
+          <summary>Mass Data</summary>
+          <div class="admin-grid">
+            <label class="admin-field"><span>Flowrate M3/h</span><input class="admin-editable" id="adminStreamFlowrate" type="number" step="0.01"></label>
+            <label class="admin-field"><span>Flow Unit</span><input class="admin-editable" id="adminStreamFlowUnit" placeholder="m3/h"></label>
+            <label class="admin-field"><span>Temperature</span><input class="admin-editable" id="adminStreamTemperature"></label>
+            <label class="admin-field"><span>Pressure</span><input class="admin-editable" id="adminStreamPressure"></label>
+            <label class="admin-field"><span>Density</span><input class="admin-editable" id="adminStreamDensity"></label>
+            <label class="admin-field"><span>Density ton/m3</span><input class="admin-editable" id="adminStreamDensityTonM3" type="number" step="0.0001"></label>
+            <label class="admin-field">
+              <span>Phase</span>
+              <select class="admin-editable" id="adminStreamPhase">
+                <option value="liquid">liquid</option>
+                <option value="gas">gas</option>
+                <option value="water">water</option>
+                <option value="solid">solid</option>
+                <option value="mixed">mixed</option>
+              </select>
+            </label>
+            <label class="admin-field">
+              <span>Balance Category</span>
+              <select class="admin-editable" id="adminStreamBalanceCategory">
+                <option value="hydrocarbon">hydrocarbon</option>
+                <option value="water">water</option>
+                <option value="utility">utility</option>
+                <option value="loss">loss</option>
+                <option value="other">other</option>
+              </select>
+            </label>
+            <label class="admin-check admin-field-wide">
+              <input class="admin-editable" id="adminStreamIsCalculated" type="checkbox">
+              <span>Is Calculated</span>
+            </label>
+            <label class="admin-check admin-field-wide">
+              <input class="admin-editable" id="adminStreamIsFinalProduct" type="checkbox">
+              <span>Is Final Product</span>
+            </label>
+            <label class="admin-check admin-field-wide">
+              <input class="admin-editable" id="adminStreamIncludeProductTable" type="checkbox">
+              <span>Include in Product Table</span>
+            </label>
+            <label class="admin-check admin-field-wide">
+              <input class="admin-editable" id="adminStreamIncludeFeedTable" type="checkbox">
+              <span>Include in Feed Table</span>
+            </label>
+            <div class="admin-subsection-title admin-field-wide">Balance Behavior</div>
+            <label class="admin-field">
+              <span>Balance Role</span>
+              <select class="admin-editable" id="adminStreamBalanceRole">
+                <option value="feed">feed</option>
+                <option value="product">product</option>
+                <option value="internal">internal</option>
+                <option value="recycle">recycle</option>
+                <option value="utility">utility</option>
+                <option value="loss">loss</option>
+              </select>
+            </label>
+            <label class="admin-check">
+              <input class="admin-editable" id="adminStreamIsRecycle" type="checkbox">
+              <span>Is Recycle</span>
+            </label>
+            <label class="admin-check">
+              <input class="admin-editable" id="adminStreamIncludeNodeBalance" type="checkbox">
+              <span>Include in Node Balance</span>
+            </label>
+            <label class="admin-check">
+              <input class="admin-editable" id="adminStreamIncludeUnitBalance" type="checkbox">
+              <span>Include in Unit Balance</span>
+            </label>
+            <div class="admin-subsection-title admin-field-wide">Operating Range</div>
+            <label class="admin-field"><span>Downstream Use</span><input class="admin-editable" id="adminStreamDownstreamUse" placeholder="HVU II Feed"></label>
+            <label class="admin-field">
+              <span>Constraint Role</span>
+              <select class="admin-editable" id="adminStreamConstraintRole">
+                <option value="normal">normal</option>
+                <option value="downstream-feed">downstream-feed</option>
+                <option value="product-quality">product-quality</option>
+                <option value="internal-circulation">internal-circulation</option>
+                <option value="recycle-return">recycle-return</option>
+              </select>
+            </label>
+            <label class="admin-field"><span>Constraint Group</span><input class="admin-editable" id="adminStreamConstraintGroup" placeholder="hvu-feed"></label>
+            <label class="admin-field">
+              <span>Flow Range Unit</span>
+              <select class="admin-editable" id="adminStreamFlowRangeUnit">
+                <option value="m3/h">m3/h</option>
+                <option value="MBSD">MBSD</option>
+              </select>
+            </label>
+            <label class="admin-field"><span>Flow Min</span><input class="admin-editable" id="adminStreamFlowMin" type="number" step="0.01"></label>
+            <label class="admin-field"><span>Flow Target</span><input class="admin-editable" id="adminStreamFlowTarget" type="number" step="0.01"></label>
+            <label class="admin-field"><span>Flow Max</span><input class="admin-editable" id="adminStreamFlowMax" type="number" step="0.01"></label>
+            <label class="admin-field">
+              <span>Range Mode</span>
+              <select class="admin-editable" id="adminStreamRangeMode">
+                <option value="monitor">monitor</option>
+                <option value="control-target">control-target</option>
+                <option value="locked-flow">locked-flow</option>
+              </select>
+            </label>
+            <label class="admin-check">
+              <input class="admin-editable" id="adminStreamUseAsTarget" type="checkbox">
+              <span>Use as Calculation Target</span>
+            </label>
+            <label class="admin-field"><span>Calculation Priority</span><input class="admin-editable" id="adminStreamCalculationPriority" type="number" step="1" min="0" value="100"></label>
+            <label class="admin-field">
+              <span>Solve Mode</span>
+              <select class="admin-editable" id="adminStreamTargetSolveMode">
+                <option value="adjust-siblings">adjust-siblings</option>
+                <option value="adjust-split-ratio">adjust-split-ratio</option>
+                <option value="adjust-source-intake">adjust-source-intake</option>
+                <option value="adjust-downstream-only">adjust-downstream-only</option>
+                <option value="manual-only">manual-only</option>
+              </select>
+            </label>
+            <label class="admin-field"><span>Target Tolerance %</span><input class="admin-editable" id="adminStreamTargetTolerancePercent" type="number" step="0.01" min="0" value="0.5"></label>
+            <label class="admin-check">
+              <input class="admin-editable" id="adminStreamAllowAutoAdjust" type="checkbox">
+              <span>Allow Auto Adjust</span>
+            </label>
+            <label class="admin-field"><span>Locked Flow</span><input class="admin-editable" id="adminStreamLockedFlow" type="number" step="0.01"></label>
+            <label class="admin-field"><span>Temperature Min</span><input class="admin-editable" id="adminStreamTemperatureMin" type="number" step="0.01"></label>
+            <label class="admin-field"><span>Temperature Target</span><input class="admin-editable" id="adminStreamTemperatureTarget" type="number" step="0.01"></label>
+            <label class="admin-field"><span>Temperature Max</span><input class="admin-editable" id="adminStreamTemperatureMax" type="number" step="0.01"></label>
+            <label class="admin-field"><span>Pressure Min</span><input class="admin-editable" id="adminStreamPressureMin" type="number" step="0.01"></label>
+            <label class="admin-field"><span>Pressure Target</span><input class="admin-editable" id="adminStreamPressureTarget" type="number" step="0.01"></label>
+            <label class="admin-field"><span>Pressure Max</span><input class="admin-editable" id="adminStreamPressureMax" type="number" step="0.01"></label>
+            <div class="admin-form-actions admin-field-wide">
+              <button class="admin-button admin-requires-edit" id="adminStreamUseHvuPreset" type="button">Use HVU Feed Preset</button>
+              <button class="admin-button admin-requires-edit" id="adminStreamClearRange" type="button">Clear Range</button>
+            </div>
+          </div>
+        </details>
+        <div class="admin-form-actions">
+          <button class="admin-button admin-button-primary admin-requires-edit" id="adminStreamSave" type="button">Simpan Stream</button>
+          <button class="admin-button admin-button-danger admin-requires-edit" id="adminStreamDelete" type="button">Hapus Stream</button>
+        </div>
+        <div class="stream-editor-card">
+          <div class="admin-section-title">
+            <div>
+              <h3>Path point editor</h3>
+              <p class="admin-helper">Aktifkan Edit Mode, lalu pilih stream untuk mengatur titik belok visual.</p>
+            </div>
+          </div>
+          <div class="stream-editor-status" id="adminStreamPointStatus">Belum aktif</div>
+          <div class="admin-form-actions">
+            <button class="admin-button admin-requires-edit" id="adminStreamEditPath" type="button">Edit Jalur</button>
+            <button class="admin-button admin-requires-edit" id="adminStreamApplyCleanRoutes" type="button">Apply Clean Routes</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-tab-panel" id="adminTabPid" data-admin-panel="pid">
+        <div class="admin-section-title">
+          <h3>P&ID Symbol</h3>
+          <button class="admin-button admin-requires-edit" id="adminPidNew" type="button">Tambah Symbol</button>
+        </div>
+        <label class="admin-field">
+          <span>Pilih symbol</span>
+          <select id="adminPidSelect"></select>
+        </label>
+        <div class="admin-grid">
+          <label class="admin-field">
+            <span>Symbol Type</span>
+            <select class="admin-editable" id="adminPidType"></select>
+          </label>
+          <label class="admin-field"><span>Tag</span><input class="admin-editable" id="adminPidTag"></label>
+          <label class="admin-field admin-field-wide"><span>Label</span><input class="admin-editable" id="adminPidLabel"></label>
+          <label class="admin-field"><span>X</span><input class="admin-editable" id="adminPidX" type="number"></label>
+          <label class="admin-field"><span>Y</span><input class="admin-editable" id="adminPidY" type="number"></label>
+          <label class="admin-field"><span>Width</span><input class="admin-editable" id="adminPidWidth" type="number" min="30"></label>
+          <label class="admin-field"><span>Height</span><input class="admin-editable" id="adminPidHeight" type="number" min="30"></label>
+          <label class="admin-field"><span>Stroke</span><input class="admin-editable" id="adminPidStroke" type="color"></label>
+          <label class="admin-field"><span>Fill</span><input class="admin-editable" id="adminPidFill" type="color"></label>
+          <label class="admin-field"><span>Stroke Width</span><input class="admin-editable" id="adminPidStrokeWidth" type="number" min="0.5" max="8" step="0.5"></label>
+          <label class="admin-field"><span>Font Size</span><input class="admin-editable" id="adminPidFontSize" type="number" min="8" max="32"></label>
+          <label class="admin-field"><span>Font Color</span><input class="admin-editable" id="adminPidFontColor" type="color"></label>
+          <label class="admin-field">
+            <span>Font Weight</span>
+            <select class="admin-editable" id="adminPidFontWeight">
+              <option value="400">400</option>
+              <option value="500">500</option>
+              <option value="600">600</option>
+              <option value="700">700</option>
+              <option value="800">800</option>
+            </select>
+          </label>
+          <label class="admin-field"><span>Opacity</span><input class="admin-editable" id="adminPidOpacity" type="number" min="0.1" max="1" step="0.05"></label>
+          <label class="admin-check admin-field-wide">
+            <input class="admin-editable" id="adminPidLocked" type="checkbox">
+            <span>Locked</span>
+          </label>
+        </div>
+        <div class="admin-form-actions">
+          <button class="admin-button admin-button-primary admin-requires-edit" id="adminPidSave" type="button">Simpan Symbol</button>
+          <button class="admin-button admin-requires-edit" id="adminPidDuplicate" type="button">Duplicate</button>
+          <button class="admin-button admin-button-danger admin-requires-edit" id="adminPidDelete" type="button">Hapus Symbol</button>
+        </div>
+      </div>
+
+      <div class="admin-tab-panel" id="adminTabConfig" data-admin-panel="config">
+        <h3>Config</h3>
+        <p class="admin-helper">Perubahan area, node, dan stream disimpan ke localStorage browser ini. Reset akan mengembalikan sample data default Stage 1.</p>
+        <dl class="admin-config-summary">
+          <div><dt>Areas</dt><dd id="adminAreaCount">0</dd></div>
+          <div><dt>Nodes</dt><dd id="adminNodeCount">0</dd></div>
+          <div><dt>Streams</dt><dd id="adminStreamCount">0</dd></div>
+          <div><dt>Storage</dt><dd id="adminStorageStatus">Default</dd></div>
+        </dl>
+        <h4>CDU Capacity Settings</h4>
+        <div class="admin-grid">
+          <label class="admin-field">
+            <span>Base Capacity M3/h</span>
+            <input class="admin-editable" id="adminCduBaseCapacityM3H" type="number" min="1" step="0.01" value="400">
+          </label>
+          <label class="admin-field">
+            <span>Base Capacity MBSD</span>
+            <input class="admin-editable" id="adminCduBaseCapacityMBSD" type="number" min="1" step="0.01" value="60">
+          </label>
+          <label class="admin-check">
+            <input class="admin-editable" id="adminCduTablesVisible" type="checkbox" checked>
+            <span>Show Floating Tables</span>
+          </label>
+          <label class="admin-check">
+            <input class="admin-editable" id="adminShowNodeBalance" type="checkbox" checked>
+            <span>Show Node Balance</span>
+          </label>
+          <label class="admin-check">
+            <input class="admin-editable" id="adminCduAutoHidePresentation" type="checkbox" checked>
+            <span>Auto hide CDU table in presentation mode</span>
+          </label>
+        </div>
+        <div class="config-tools">
+          <button class="admin-button admin-button-primary" id="adminConfigExport" type="button">Export JSON</button>
+          <button class="admin-button admin-button-primary admin-requires-edit" id="adminConfigDeploy" type="button">Save &amp; Deploy Default</button>
+          <label class="admin-button admin-requires-edit config-import-label" for="adminConfigImport">
+            Import JSON
+            <input class="sr-only" id="adminConfigImport" type="file" accept="application/json,.json">
+          </label>
+          <button class="admin-button admin-requires-edit" id="adminLoadCduDefault" type="button">Load CDU Default</button>
+          <button class="admin-button admin-requires-edit" id="adminConfigRestore" type="button">Restore Backup</button>
+        </div>
+        <p class="deployment-status" id="adminDeploymentStatus" data-status="local">Autosaved locally</p>
+        <div class="config-preview is-hidden" id="adminImportPreview" role="status" aria-live="polite">
+          <p class="eyebrow">Preview import</p>
+          <h4 id="adminImportPreviewTitle">Config siap diimport</h4>
+          <dl>
+            <div><dt>Area</dt><dd id="adminImportAreaCount">0</dd></div>
+            <div><dt>Node</dt><dd id="adminImportNodeCount">0</dd></div>
+            <div><dt>Stream</dt><dd id="adminImportStreamCount">0</dd></div>
+          </dl>
+          <p id="adminImportPreviewMessage">Periksa jumlah data sebelum mengganti config aktif.</p>
+          <div class="admin-form-actions">
+            <button class="admin-button admin-button-primary admin-requires-edit" id="adminImportApply" type="button">Terapkan Import</button>
+            <button class="admin-button" id="adminImportCancel" type="button">Batal</button>
+          </div>
+        </div>
+        <div class="admin-form-actions">
+          <button class="admin-button admin-button-danger admin-requires-edit" id="adminConfigReset" type="button">Reset Config</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="shortcut-modal is-hidden" id="shortcutModal" role="dialog" aria-modal="true" aria-labelledby="shortcutTitle">
+      <div class="shortcut-dialog">
+        <div class="shortcut-header">
+          <div>
+            <p class="eyebrow">Bantuan cepat</p>
+            <h2 id="shortcutTitle">Keyboard Shortcut</h2>
+          </div>
+          <button class="admin-icon-button" id="shortcutClose" type="button" aria-label="Tutup bantuan shortcut">×</button>
+        </div>
+        <div class="shortcut-grid">
+          <div><kbd>F</kbd><span>Fit all canvas</span></div>
+          <div><kbd>R</kbd><span>Reset view</span></div>
+          <div><kbd>Esc</kbd><span>Tutup modal/panel atau keluar presentation</span></div>
+          <div><kbd>Arrow</kbd><span>Navigasi node saat presentation</span></div>
+          <div><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>A</kbd><span>Admin login tersembunyi</span></div>
+          <div><kbd>admin</kbd><span>Ketik sequence untuk admin login</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-root" id="toastRoot" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="./app.recovery.v8.ai.js?v=v8-color-themes-20260713"></script>
+  </body>
+</html>
